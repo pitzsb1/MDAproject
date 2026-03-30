@@ -37,6 +37,23 @@ EEG data(**독립 변수 x**): Fp1, F3, C3, P3, Fz, Cz, Pz, Fp2, F4, C4, P4, F7,
 | Fz / Cz / Pz | 중앙 라인       |
 | EKG          | 심전도 (심장 신호) |
 
+| Column Name | 설명 | 예시 | 역할 |
+|-------------|------|------|------|
+| eeg_id | EEG 전체 신호 파일 ID | 1628180742 | train_eegs/{eeg_id}.parquet 파일과 연결 |
+| eeg_sub_id | EEG 파일 내 세그먼트 번호 | 0, 1, 2 | 하나의 EEG를 여러 샘플로 나눈 인덱스 |
+| eeg_label_offset_seconds | EEG에서 라벨이 적용되는 시작 시간 (초) | 353733 | 해당 위치에서 일정 구간 EEG 추출 |
+| spectrogram_id | Spectrogram 파일 ID | 127492639 | train_spectrograms/{id}.parquet 연결 |
+| spectrogram_sub_id | Spectrogram 세그먼트 번호 | 0 | spectrogram segmentation 인덱스 |
+| spectrogram_label_offset_seconds | Spectrogram에서 라벨 시작 위치 | 0.0 | spectrogram 기준 offset |
+| label_id | 라벨 ID | 353733 | 라벨 식별용 ID |
+| patient_id | 환자 ID | 42516 | 같은 환자의 여러 EEG 존재 |
+| expert_consensus | 전문가 최종 판단 라벨 | Seizure | 모델이 예측해야 할 target |
+| seizure_vote | Seizure 투표 수 | 3 | 전문가 투표 수 |
+| lpd_vote | LPD 투표 수 | 0 | 전문가 투표 수 |
+| gpd_vote | GPD 투표 수 | 0 | 전문가 투표 수 |
+| lrda_vote | LRDA 투표 수 | 0 | 전문가 투표 수 |
+| grda_vote | GRDA 투표 수 | 0 | 전문가 투표 수 |
+| other_vote | 기타 라벨 투표 수 | 0 | 전문가 투표 수 |
 
 _filtered spectogream_: 위 19개 채널을 그대로 쓰지 않고, 4개의 영역(LL, LP, RP, RR)으로 묶어 이미지화. 각 영역은 128(주파수) x 256(시간) 크기의 행렬(Matrix) 데이터가 되어 모델의 입력값이 됨.
 
