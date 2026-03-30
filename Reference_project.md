@@ -16,6 +16,8 @@ DATA: HMS - Harmful Brain Activity Classification
 
 ## 원본 데이터 | Harmful Brain Activity Classification
 
+<img width="560" height="508" alt="image" src="https://github.com/user-attachments/assets/e3faa07e-8bfa-4288-9b8a-6f2c6b3bdcaf" />
+
 원본 데이터 출처: Harvard Medical School
 
 데이터 크기 및 구성
@@ -23,6 +25,18 @@ DATA: HMS - Harmful Brain Activity Classification
 - Test Set: 1개 (대회 규정)
 
 EEG data(**독립 변수 x**): Fp1, F3, C3, P3, Fz, Cz, Pz, Fp2, F4, C4, P4, F7, T3, T5, O1, F8, T4, T6, O2, EKG (총 20개 채널)
+
+| 채널           | 위치          |
+| ------------ | ----------- |
+| Fp1 / Fp2    | 전두엽 앞쪽      |
+| F3 / F4      | 전두엽         |
+| C3 / C4      | 중앙          |
+| P3 / P4      | 두정엽         |
+| O1 / O2      | 후두엽         |
+| T3 / T4      | 측두엽         |
+| Fz / Cz / Pz | 중앙 라인       |
+| EKG          | 심전도 (심장 신호) |
+
 
 _filtered spectogream_: 위 19개 채널을 그대로 쓰지 않고, 4개의 영역(LL, LP, RP, RR)으로 묶어 이미지화. 각 영역은 128(주파수) x 256(시간) 크기의 행렬(Matrix) 데이터가 되어 모델의 입력값이 됨.
 
