@@ -26,17 +26,6 @@ DATA: HMS - Harmful Brain Activity Classification
 
 EEG data(**독립 변수 x**): Fp1, F3, C3, P3, Fz, Cz, Pz, Fp2, F4, C4, P4, F7, T3, T5, O1, F8, T4, T6, O2, EKG (총 20개 채널)
 
-| 채널           | 위치          |
-| ------------ | ----------- |
-| Fp1 / Fp2    | 전두엽 앞쪽      |
-| F3 / F4      | 전두엽         |
-| C3 / C4      | 중앙          |
-| P3 / P4      | 두정엽         |
-| O1 / O2      | 후두엽         |
-| T3 / T4      | 측두엽         |
-| Fz / Cz / Pz | 중앙 라인       |
-| EKG          | 심전도 (심장 신호) |
-
 | Column Name | 설명 | 예시 | 역할 |
 |-------------|------|------|------|
 | eeg_id | EEG 전체 신호 파일 ID | 1628180742 | train_eegs/{eeg_id}.parquet 파일과 연결 |
