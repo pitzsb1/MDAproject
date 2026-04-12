@@ -24,7 +24,7 @@ DATA: HMS - Harmful Brain Activity Classification
 - Train Set: 약 106,800개의 행(row)으로 구성된 메타데이터(train.csv)와 수만 개의 EEG/Spectrogram 개별 파일
 - Test Set: 1개 (대회 규정)
 
-EEG data(**독립 변수 x**): Fp1, F3, C3, P3, Fz, Cz, Pz, Fp2, F4, C4, P4, F7, T3, T5, O1, F8, T4, T6, O2, EKG (총 20개 채널)
+EEG data(**독립 변수 x**): Fp1/Fp2(전두엽 앞쪽), F3/F4(전두엽), C3/C4(중앙), P3/P4(두정엽), O1/O2(후두엽), T3/T4(측두엽), Fz/Cz/Pz(중앙 라인), EKG(심전도) [총 20개 채널]
 
 | Column Name | 설명 | 예시 | 역할 |
 |-------------|------|------|------|
@@ -46,19 +46,7 @@ EEG data(**독립 변수 x**): Fp1, F3, C3, P3, Fz, Cz, Pz, Fp2, F4, C4, P4, F7,
 
 _filtered spectogream_: 위 19개 채널을 그대로 쓰지 않고, 4개의 영역(LL, LP, RP, RR)으로 묶어 이미지화. 각 영역은 128(주파수) x 256(시간) 크기의 행렬(Matrix) 데이터가 되어 모델의 입력값이 됨.
 
-6가지 뇌 활동(**종속 변수 y**): 
-
-- seizure_vote (발작)
-
-- lpd_vote (좌측 주기적 이당성 방전)
-
-- gpd_vote (일반화된 주기적 방전)
-
-- lrda_vote (좌측 리드미컬 델타 활동)
-
-- grda_vote (일반화된 리드미컬 델타 활동)
-
-- other_vote (기타)
+6가지 뇌 활동(**종속 변수 y**): seizure_vote(발작), lpd_vote(좌측 주기적 이당성 방전), gpd_vote(일반화된 주기적 방전), lrda_vote(좌측 리드미컬 델타 활동), grda_vote(일반화된 리드미컬 델타 활동), other_vote(기타)
 
 ## 데이터 전처리
 
