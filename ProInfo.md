@@ -1,153 +1,161 @@
-# 의료데이터분석 프로젝트 제안서
+# Statistical Feature-Based EEG Classification for Harmful Brain Activity
 
-### Title | 통계적 특징 추출 기반 뇌파(EEG) 이상 활동 자동 분류 시스템
+## Overview
 
-2026년 4월 12일(Updated), 최은혜
+This project focuses on building a lightweight and interpretable machine learning system for detecting harmful brain activity from EEG signals using **statistical feature engineering**.
 
-### Subject
+Instead of converting EEG signals into images or using deep learning, this approach extracts key statistical features from time-series data and applies classical machine learning models such as Random Forest and XGBoost.
 
-시계열 통계 피처 엔지니어링과 머신러닝(Random Forest/XGBoost)을 활용한 6종 요주의 뇌 활동(Harmful Brain Activity) 분류
+---
 
-### DataSet | Harmful Brain Activity Classification (약 106,800개)
+## Objectives
 
-| Column Name | 설명 | 예시 | 역할 |
-|-------------|------|------|------|
-| eeg_id | EEG 전체 신호 파일 ID | 1628180742 | train_eegs/{eeg_id}.parquet 파일과 연결 |
-| eeg_sub_id | EEG 파일 내 세그먼트 번호 | 0, 1, 2 | 하나의 EEG를 여러 샘플로 나눈 인덱스 |
-| eeg_label_offset_seconds | EEG에서 라벨이 적용되는 시작 시간 (초) | 353733 | 해당 위치에서 일정 구간 EEG 추출 |
-| spectrogram_id | Spectrogram 파일 ID | 127492639 | train_spectrograms/{id}.parquet 연결 |
-| spectrogram_sub_id | Spectrogram 세그먼트 번호 | 0 | spectrogram segmentation 인덱스 |
-| spectrogram_label_offset_seconds | Spectrogram에서 라벨 시작 위치 | 0.0 | spectrogram 기준 offset |
-| label_id | 라벨 ID | 353733 | 라벨 식별용 ID |
-| patient_id | 환자 ID | 42516 | 같은 환자의 여러 EEG 존재 |
-| expert_consensus | 전문가 최종 판단 라벨 | Seizure | 모델이 예측해야 할 target |
-| seizure_vote | Seizure 투표 수 | 3 | 전문가 투표 수 |
-| lpd_vote | LPD 투표 수 | 0 | 전문가 투표 수 |
-| gpd_vote | GPD 투표 수 | 0 | 전문가 투표 수 |
-| lrda_vote | LRDA 투표 수 | 0 | 전문가 투표 수 |
-| grda_vote | GRDA 투표 수 | 0 | 전문가 투표 수 |
-| other_vote | 기타 라벨 투표 수 | 0 | 전문가 투표 수 |
+* Efficiently represent EEG signals using statistical features
+* Build an interpretable classification model
+* Enable fast training and inference on CPU environments
+* Provide a strong baseline for EEG classification tasks
 
-Index | Fp1 | F3 | C3 | P3 | F7 | T3 | T5 | O1 | Fz | Cz | Pz | Fp2 | F4 | C4 | P4 | F8 | T4 | T6 | O2 | EKG
------ | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | -----
-0 | -105.849998 | -89.230003 | -79.459999 | -49.230000 | -99.730003 | -87.769997 | -53.330002 | -50.740002 | -32.250000 | -42.099998 | -43.270000 | -88.730003 | -74.410004 | -92.459999 | -58.930000 | -75.739998 | -59.470001 | 8.210000 | 66.489998 | 1404.930054
-1 | -85.470001 | -75.070000 | -60.259998 | -38.919998 | -73.080002 | -87.510002 | -39.680000 | -35.630001 | -76.839996 | -62.740002 | -43.040001 | -68.629997 | -61.689999 | -69.320000 | -35.790001 | -58.900002 | -41.660000 | 196.190002 | 230.669998 | 3402.669922
-2 | 8.840000 | 34.849998 | 56.430000 | 67.970001 | 48.099998 | 25.350000 | 80.250000 | 48.060001 | 6.720000 | 37.880001 | 61.000000 | 16.580000 | 55.060001 | 45.020000 | 70.529999 | 47.820000 | 72.029999 | -67.180000 | -171.309998 | -3565.800049
-3 | -56.320000 | -37.279999 | -28.100000 | -2.820000 | -43.430000 | -35.049999 | 3.910000 | -12.660000 | 8.650000 | 3.830000 | 4.180000 | -51.900002 | -21.889999 | -41.330002 | -11.580000 | -27.040001 | -11.730000 | -91.000000 | -81.190002 | -1280.930054
-4 | -110.139999 | -104.519997 | -96.879997 | -70.250000 | -111.660004 | -114.430000 | -71.830002 | -61.919998 | -76.150002 | -79.779999 | -67.480003 | -99.029999 | -93.610001 | -104.410004 | -70.070000 | -89.250000 | -77.260002 | 155.729996 | 264.850006 | 4325.370117
+---
 
-**Resource**: Harvard Medical School
+## Dataset
 
-**Calumn...**
+* Competition: Harmful Brain Activity Classification
+* Source: Harvard Medical School
+* Size: ~106,800 samples
 
-**EEG data(독립 변수 x)**: Fp1/Fp2(전두엽 앞쪽), F3/F4(전두엽), C3/C4(중앙), P3/P4(두정엽), O1/O2(후두엽), T3/T4(측두엽), Fz/Cz/Pz(중앙 라인), EKG(심전도) [총 20개 채널]
+### Download via Kaggle API
 
-**6가지 뇌 활동(종속 변수 y)**: seizure_vote(발작), lpd_vote(좌측 주기적 이당성 방전), gpd_vote(일반화된 주기적 방전), lrda_vote(좌측 리드미컬 델타 활동), grda_vote(일반화된 리드미컬 델타 활동), other_vote(기타) [총 6개의 클래스로 이루어진 전문가 투표 분표]
+```bash
+kaggle competitions download -c hms-harmful-brain-activity-classification
+```
 
-### 배경 및 필요성 
+---
 
-- **진단의 복잡성**
+## Data Description
 
-뇌파(EEG) 데이터는 초당 수백 번 진동하는 다채널 신호로, 전문가가 아니면 이상 징후를 직관적으로 파악하기 어려움.
+### Input Features (EEG Signals)
 
-- **데이터 효율성**
+20-channel EEG signals:
 
-딥러닝(CNN)을 위한 이미지 변환 과정은 높은 연산 비용과 복잡한 수학적 전처리가 필요하여 초기 접근 장벽이 높음.
+* Frontal: Fp1, Fp2, F3, F4
+* Central: C3, C4, Cz
+* Parietal: P3, P4, Pz
+* Occipital: O1, O2
+* Temporal: T3, T4, T5, T6
+* Midline: Fz
+* EKG
 
-- **머신러닝의 강점**
+### Target Labels (6 Classes)
 
-뇌파의 진폭, 변동성 등 핵심 통계치만으로도 발작(Seizure) 등의 주요 패턴을 빠르게 감지할 수 있는 가벼운 시스템이 필요함.
+* Seizure
+* LPD (Lateralized Periodic Discharges)
+* GPD (Generalized Periodic Discharges)
+* LRDA (Lateralized Rhythmic Delta Activity)
+* GRDA (Generalized Rhythmic Delta Activity)
+* Other
 
-### 프로젝트 목표
+Labels are based on expert voting distributions.
 
-- **핵심 특징 추출**
+---
 
-뇌파의 파형을 이미지로 바꾸는 대신, 평균, 표준편차, 에너지 등 **통계적 요약 수치(Features)**를 통해 데이터의 차원을 효율적으로 압축.
+## Methodology
 
-- **해석 가능한 AI 구축**
+### 1. Statistical Feature Engineering
 
-딥러닝의 블랙박스 구조 대신, 어떤 통계적 수치가 발작 진단에 결정적인 역할을 했는지 설명할 수 있는 머신러닝 모델 구현.
+From each EEG channel, extract:
 
-- **빠른 프로토타이핑**
+* Mean
+* Standard deviation
+* Minimum / Maximum
+* Range
+* Skewness
+* (Optional) Energy, kurtosis, entropy
 
-복잡한 GPU 환경 없이도 일반 CPU 환경에서 신속하게 학습 및 검증이 가능한 베이스라인 구축.
+These features summarize the temporal characteristics of EEG signals.
 
-### 주요 기능 및 특징
+### 2. Tabular Data Construction
 
-- **통계 기반 피처 엔지니어링 (Feature Engineering)**
+* Combine features from all 20 channels into a structured table
+* Each row represents a single EEG segment
 
-각 채널별 시계열 데이터에서 Mean(평균), Std(표준편차), Min/Max(범위), Skewness(왜도) 등을 추출.
+### 3. Model Training
 
-- **정형 데이터(Tabular) 학습**
+* Random Forest (baseline)
+* XGBoost (advanced boosting model)
 
-추출된 통계치들을 하나의 표(Table)로 통합하여 Random Forest 또는 XGBoost 모델로 학습.
+### 4. Evaluation
 
-- **중요도 분석**
+* Cross-validation
+* Metrics:
 
-모델 내 Feature Importance 기능을 활용하여 20개 전극 중 어떤 위치(예: 전두엽 vs 측두엽)가 진단에 가장 중요한지 분석.
+  * Accuracy
+  * F1-score
+  * Recall
 
-### 일정 및 계획
+---
 
-- **1주차 | 데이터 탐색 및 기초 처리**
+## Project Structure
 
-EEG Raw 데이터 로드 및 결측치 처리.
+```
+.
+├── data/
+│   ├── raw/
+│   ├── processed/
+├── notebooks/
+├── src/
+│   ├── preprocessing.py
+│   ├── feature_engineering.py
+│   ├── train_rf.py
+│   ├── train_xgb.py
+│   └── evaluate.py
+├── results/
+└── README.md
+```
 
-특정 채널(예: Fp1)에서 발작 발생 시와 정상 시의 파형 차이 시각화.
+---
 
-- **2주차 | 피처 엔지니어링 및 모델링**
+## Training Pipeline
 
-20개 전극 전체에 대한 통계치(Feature) 추출 함수 구현.
+1. Data loading and preprocessing
+2. Statistical feature extraction per channel
+3. Feature aggregation into tabular format
+4. Model training (Random Forest / XGBoost)
+5. Cross-validation and evaluation
 
-Random Forest 베이스라인 모델 학습 및 기본 성능 확인.
+---
 
-- **3주차 | 모델 고도화**
+## Expected Results
 
-XGBoost 등 부스팅 모델 도입 및 하이퍼파라미터 튜닝.
+* Fast and stable training without GPU
+* Competitive baseline performance
+* Improved interpretability compared to deep learning models
 
-과적합(Overfitting) 방지를 위한 교차 검증(Cross-validation) 적용.
+---
 
-- **4주차 | 결과 분석 및 보고서 작성**
+## Key Contributions
 
-혼동 행렬(Confusion Matrix)을 통한 클래스별 정확도 분석.
+* Efficient EEG representation using statistical features
+* Interpretable machine learning pipeline
+* Practical baseline for medical time-series classification
 
-추출된 특징들 중 진단에 기여도가 높은 항목 정리 및 최종 발표.
+---
 
-### 기대효과
+## Analysis and Interpretability
 
-- **의료 현장의 신속성**
+* Feature importance analysis to identify key EEG channels
+* Insights into which brain regions contribute most to classification
+* Transparent decision-making process for medical collaboration
 
-이미지 변환 과정이 없어 연산 속도가 매우 빠르므로, 실시간 모니터링 시스템의 기초 로직으로 활용 가능.
+---
 
-- **분석의 투명성**
+## Future Work
 
-"어떤 수치 때문에 위험한가"에 대한 근거를 제시함으로써 의료진과의 협업 시 높은 신뢰도 제공.
+* Real-time EEG monitoring system
+* Integration with portable EEG devices
+* Hybrid approach combining statistical features with deep learning
 
-### 결론
+---
 
-복잡한 딥러닝 대신, 사람이 이해할 수 있는 통계치(숫자)를 활용해 뇌파를 쉽고 빠르게 분석하는 신뢰도 높은 인공지능 모델을 만드는 것
+## Conclusion
 
-### 기존 프로젝트의 문제점 개선 | 데이터의 모호성 해결
-
-전문가 투표의 일치도가 높은 데이터(만장일치)에 더 높은 학습 가중치를 부여. 이를 통해 모델이 '누가 봐도 확실한 발작 패턴'을 우선적으로 완벽하게 학습하도록 하여 진단의 명확성을 높임.
-
-### 기존 프로젝트의 성능 개선 (기술적 차이) | 슬라이딩 윈도우
-
-전체 50초 데이터를 한꺼번에 통계 내는 대신, 5초 단위로 잘라서(Sliding Window) 통계치가 어떻게 변하는지 분석
-
-e.g.) "전체 평균은 정상이지만, 마지막 5초 동안 변동성(Std)이 급격히 커졌다"는 흐름을 포착하여 발작 전조 증상을 더 잘 잡아내게 함.
-
-### 실제 환경 개선 및 반영 제안
-
-기존 프로젝트들이 '병원 내 의료진'의 판독 보조에 집중했다면, 본 프로젝트는 병원 밖 환자와 가족들이 겪는 진단 지연의 고통을 해결하는 데 초점을 맞춤.
-
-- **진단 장벽의 제거 (Instant Feedback)**
-
-현재는 발작 의심 증상 발생 시 병원에 입원하여 며칠간 뇌파를 측정하고 분석 결과를 기다려야 함. 본 모델은 수집된 EEG 데이터를 즉시 분석하여, 가정에서도 현재 증상이 어떤 유형(발작, 이상 활동 등)인지 실시간으로 파악할 수 있게 하여 보호자의 심리적 불안감을 해소함.
-
-- **재택 모니터링 시스템(Home-based Monitoring) 구현**
-
-고가의 의료용 장비가 없어도, 휴대용 EEG 기기를 통해 수집된 데이터만 있다면 보호자가 스마트폰이나 태블릿을 통해 즉각적인 '1차 스크리닝' 결과를 확인할 수 있는 환경을 제안. 이는 응급실 방문 여부를 빠르게 결정하는 가이드라인이 됨.
-
-- **설명 가능한 리포트 제공**
-
-어려운 의학 용어 대신, 모델이 분석한 통계치를 바탕으로 "현재 뇌파의 변동성이 평소보다 몇 배 높으니 즉시 병원 방문이 필요합니다"와 같은 환자 맞춤형 직관적 리포트를 생성하여 제공.
+This project demonstrates that EEG signals can be effectively classified using simple statistical features and classical machine learning models, providing a fast, interpretable, and practical alternative to deep learning approaches.
