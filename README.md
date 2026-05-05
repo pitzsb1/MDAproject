@@ -1,208 +1,211 @@
-# Statistical Feature-Based EEG Pattern Analysis and Anomaly Detection
+# EEG Unsupervised Analysis & Anomaly Detection
 
 ## Overview
 
-This project focuses on building a lightweight and interpretable system for analyzing EEG signals using **statistical feature engineering and unsupervised learning**.
+EEG (Electroencephalogram) signals are high-dimensional time-series data with complex and continuous patterns.
+This project explores **unsupervised learning approaches** to:
 
-Instead of relying on labeled data or deep learning models, this approach extracts key statistical features from time-series EEG signals and explores their **underlying structure and abnormal patterns** without predefined labels.
-
-The goal is not to classify predefined brain activity types, but to **discover latent patterns and detect anomalous EEG signals**.
+* Discover latent structure in EEG data
+* Detect abnormal brain activity patterns
+* Build an interpretable and lightweight analysis pipeline
 
 ---
 
 ## Objectives
 
-* Represent EEG signals efficiently using statistical features
-* Discover latent structures and patterns in EEG data
-* Detect abnormal EEG signals without relying on labels
-* Enable fast inference in CPU-based environments
-* Provide interpretable insights into EEG signal behavior
+1. **Latent Structure Discovery**
+   Identify hidden patterns and cluster structures in EEG signals.
+
+2. **Anomaly Detection**
+   Automatically detect abnormal EEG signals without labels.
+
+3. **Interpretability**
+   Analyze statistical characteristics of clusters and anomalies.
+
+4. **Lightweight System**
+   Build a CPU-efficient pipeline without deep learning.
 
 ---
 
 ## Dataset
 
-* Competition: Harmful Brain Activity Classification
-* Source: Harvard Medical School
-* Size: ~106,800 samples
+* Source: HMS Harmful Brain Activity Classification (Kaggle)
+* EEG shape: `(10000 timesteps × 20 channels)`
+* Total EEG files: ~17,300
+* Labels (for post-hoc analysis):
 
-### Download via Kaggle API
+  * Seizure, GPD, LPD, GRDA, LRDA, Other
 
-```bash
-kaggle competitions download -c hms-harmful-brain-activity-classification
+### Key Observations
+
+* EEG channels: similar scale (std ~50)
+* EKG channel: extremely large scale (std ~3000)
+* Multiple segments per EEG ID
+
+---
+
+## Feature Engineering
+
+Statistical features were extracted from each EEG channel:
+
+* Mean, Std
+* Min, Max, Range
+* Skewness, Kurtosis
+* Absolute Mean
+* Flat Signal Flag
+
+> Initially included autocorrelation features, but removed due to noise sensitivity and computational cost.
+
+---
+
+## Critical Issue: Artifact Detection
+
+### Initial Problem
+
+The anomaly detection model identified **sensor artifacts instead of meaningful EEG patterns**.
+
+Examples:
+
+* Sudden spikes (~30,000 amplitude)
+* Flat or corrupted signals
+
+---
+
+### Solution: Data Cleaning
+
+Artifact filtering applied:
+
+* Extreme amplitude threshold
+* Abnormal global variance
+* High NaN ratio
+
+Result:
+
+```
+17300 → 8739 EEG samples (cleaned)
 ```
 
-## Data Description
-
-### Input Features (EEG Signals)
-
-20-channel EEG signals:
-
-- **Frontal**: Fp1, Fp2, F3, F4  
-- **Central**: C3, C4, Cz  
-- **Parietal**: P3, P4, Pz  
-- **Occipital**: O1, O2  
-- **Temporal**: T3, T4, T5, T6  
-- **Midline**: Fz  
-- **EKG**
+ Key Insight:
+> **Data quality had a larger impact than model choice**
 
 ---
 
-### Reference Labels (Used for Post-hoc Analysis Only)
+## Dimensionality Reduction (PCA)
 
-- Seizure  
-- LPD (Lateralized Periodic Discharges)  
-- GPD (Generalized Periodic Discharges)  
-- LRDA (Lateralized Rhythmic Delta Activity)  
-- GRDA (Generalized Rhythmic Delta Activity)  
-- Other  
+* PCA applied after scaling and imputation
+* 2 components explained ~45–54% variance
 
-> **Note:** These labels are **NOT used for training**, but only for interpreting and validating discovered patterns.
+### Insight
 
----
+EEG data does **not form discrete clusters**, but rather:
 
-## Methodology
-
-### 1. Statistical Feature Engineering
-
-From each EEG channel, extract:
-
-- Mean  
-- Standard deviation  
-- Minimum / Maximum  
-- Range  
-- Skewness  
-- (Optional) Energy, kurtosis, entropy  
-
-These features summarize the temporal characteristics of EEG signals.
+> -> Continuous structure of brain activity patterns
 
 ---
 
-### 2. Tabular Data Construction
+## Clustering (K-Means)
 
-- Combine features from all 20 channels into a structured table  
-- Each row represents a single EEG segment  
+* Tested k = 2 ~ 10 (Elbow method)
+* Optimal k ≈ 3
+* Silhouette Score ≈ **0.77**
 
----
+### Insight
 
-### 3. Unsupervised Learning
+* Clusters formed clearly in feature space
+* But did **not perfectly align with labels**
 
-#### Clustering
-
-- K-means  
-- Gaussian Mixture Model (GMM)  
-
-**Goal:**  
-- Discover natural groupings of EEG patterns  
+-> EEG patterns are **continuous, not categorical**
 
 ---
 
-#### Anomaly Detection
+## Anomaly Detection (Isolation Forest)
 
-- Isolation Forest  
-- One-Class SVM  
+* Contamination: 5%
+* Output:
 
-**Goal:**  
-- Detect EEG signals that deviate from normal patterns  
+  * `-1`: anomaly
+  * `1`: normal
+  * continuous anomaly score
 
----
+### Key Findings
 
-### 4. Dimensionality Reduction & Visualization
-
-- PCA  
-- t-SNE / UMAP  
-
-**Goal:**  
-- Visualize high-dimensional EEG feature space  
-- Understand cluster structure and data distribution  
+| Before Cleaning   | After Cleaning            |
+| ----------------- | ------------------------- |
+| Detects artifacts | Detects real EEG patterns |
+| Noisy results     | Structured anomalies      |
 
 ---
 
-### 5. Evaluation
+## Results
 
-Since this is an unsupervised approach, evaluation is performed using:
+### Major Findings
 
-#### Internal Metrics
-
-- Silhouette Score  
-- Cluster separation  
-
-#### External Analysis
-
-- Compare clusters with expert labels  
-- Analyze relationship between anomaly scores and harmful brain activity  
+* EEG data exhibits **continuous latent structure**
+* Unsupervised models detect **degree of abnormality**, not strict classes
+* Artifact removal is **critical for meaningful results**
 
 ---
 
-## Project Structure
+## Interpretation
 
-```bash
-.
-├── data/
-│ ├── raw/
-│ ├── processed/
-├── notebooks/
-├── src/
-│ ├── preprocessing.py
-│ ├── feature_engineering.py
-│ ├── clustering.py
-│ ├── anomaly_detection.py
-│ └── evaluation.py
-├── results/
-└── README.md
-```
+Anomalous EEG signals showed:
+
+* Higher variance (std)
+* More extreme values (range)
+* Increased spikiness (kurtosis)
+* Non-flat dynamic patterns
 
 ---
 
-## Pipeline
+## Key Takeaways
 
-1. Data loading and preprocessing  
-2. Statistical feature extraction per channel  
-3. Feature aggregation into tabular format  
-4. Clustering and anomaly detection  
-5. Visualization and structure analysis  
-6. Post-hoc comparison with expert labels  
+> “Unsupervised learning does not classify EEG —
+> it reveals the structure of brain activity.”
 
----
-
-## Expected Results
-
-- Identification of latent EEG pattern clusters  
-- Detection of abnormal EEG signals  
-- Fast inference without GPU  
-- Interpretable statistical insights into brain activity  
+* Not a classification problem
+* But a **pattern discovery problem**
 
 ---
 
-## Key Contributions
+## Tech Stack
 
-- Unsupervised learning framework for EEG analysis  
-- Statistical feature-based anomaly detection  
-- Interpretable and lightweight pipeline  
-- Ability to discover previously undefined EEG patterns  
-
----
-
-## Analysis and Interpretability
-
-- Statistical feature analysis per cluster  
-- Identification of abnormal signal characteristics  
-- Explanation of anomalies based on signal variability and distribution  
-- Comparison with known clinical labels for validation  
+* Python
+* Pandas / NumPy
+* Scikit-learn
+* Matplotlib / Seaborn
+* Joblib (parallel processing)
 
 ---
 
 ## Future Work
 
-- Real-time EEG anomaly monitoring system  
-- Integration with portable EEG devices  
-- Semi-supervised learning using limited labels  
-- Hybrid approach combining statistical and deep learning features  
+* Frequency domain features (FFT)
+* Time-frequency analysis (STFT, Wavelet)
+* Deep learning comparison (CNN / Transformer)
+* Real-time EEG anomaly detection system
+
+---
+
+## Example Visualization
+
+* PCA projection
+* K-means clustering
+* Anomaly score heatmap
 
 ---
 
 ## Conclusion
 
-This project demonstrates that EEG signals can be effectively analyzed without relying on predefined labels, by leveraging statistical features and unsupervised learning techniques.
+This project demonstrates that:
 
-Rather than focusing on classification, the system aims to **understand the structure of EEG data and detect abnormal patterns**, providing a flexible and interpretable approach for real-world monitoring scenarios.
+* EEG data is inherently continuous
+* Unsupervised learning is effective for structure discovery
+* Data preprocessing is more important than model complexity
+
+---
+
+## Final Thought
+
+> “Once noise is removed, the model starts to see the brain.”
+
+---
