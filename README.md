@@ -201,11 +201,3 @@ This project demonstrates that:
 * EEG data is inherently continuous
 * Unsupervised learning is effective for structure discovery
 * Data preprocessing is more important than model complexity
-
----
-
-## Final Thought
-
-> “Once noise is removed, the model starts to see the brain.”
-
----
